@@ -1,4 +1,6 @@
 .env
 .env.example
 .claude
+.framework BLAST
+.protocolo_BLAST.md
 
