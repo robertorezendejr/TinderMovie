@@ -1,0 +1,236 @@
+/* ==========================================================================
+   Login Screen
+   ========================================================================== */
+
+.login-wrapper {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  padding: 40px 28px;
+  gap: 28px;
+}
+
+/* --- Branding --- */
+.login-brand {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 10px;
+}
+
+.login-logo-img {
+  width: 64px;
+  height: 64px;
+  filter: drop-shadow(0 0 16px rgba(233, 64, 87, 0.5));
+}
+
+.login-brand h1 {
+  font-size: 32px;
+  font-weight: 800;
+  letter-spacing: -0.5px;
+}
+
+.login-brand h1 span {
+  color: #ff4b2b;
+}
+
+.login-tagline {
+  font-size: 14px;
+  color: var(--text-muted);
+  text-align: center;
+}
+
+/* --- Abas --- */
+.auth-tabs {
+  display: flex;
+  width: 100%;
+  background: rgba(255, 255, 255, 0.04);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 12px;
+  padding: 4px;
+  gap: 4px;
+}
+
+.auth-tab {
+  flex: 1;
+  padding: 10px;
+  border: none;
+  border-radius: 9px;
+  background: transparent;
+  color: var(--text-muted);
+  font-family: var(--font-family);
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: var(--transition-smooth);
+}
+
+.auth-tab.active {
+  background: var(--color-accent);
+  color: white;
+  box-shadow: 0 4px 12px rgba(233, 64, 87, 0.3);
+}
+
+/* --- Form --- */
+.login-form {
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.login-form.hidden {
+  display: none;
+}
+
+.input-group {
+  display: flex;
+  flex-direction: column;
+  gap: 7px;
+}
+
+.label-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+}
+
+.input-group label {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--text-secondary);
+}
+
+.input-field {
+  position: relative;
+  display: flex;
+  align-items: center;
+}
+
+.input-icon {
+  position: absolute;
+  left: 14px;
+  color: var(--text-muted);
+  font-size: 14px;
+  pointer-events: none;
+}
+
+.input-field input {
+  width: 100%;
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 12px;
+  color: var(--text-primary);
+  padding: 14px 44px;
+  font-family: var(--font-family);
+  font-size: 15px;
+  transition: var(--transition-smooth);
+}
+
+.input-field input::placeholder {
+  color: var(--text-muted);
+}
+
+.input-field input:focus {
+  outline: none;
+  border-color: #e94057;
+  background: rgba(233, 64, 87, 0.06);
+}
+
+.toggle-password {
+  position: absolute;
+  right: 12px;
+  background: none;
+  border: none;
+  color: var(--text-muted);
+  cursor: pointer;
+  padding: 6px;
+  font-size: 14px;
+  transition: var(--transition-smooth);
+  display: flex;
+  align-items: center;
+}
+
+.toggle-password:hover {
+  color: var(--text-secondary);
+}
+
+.forgot-link {
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--text-muted);
+  text-decoration: none;
+  transition: var(--transition-smooth);
+}
+
+.forgot-link:hover {
+  color: #e94057;
+}
+
+/* --- Feedback (erro / sucesso) --- */
+.auth-feedback {
+  border-radius: 10px;
+  padding: 10px 14px;
+  font-size: 13px;
+  line-height: 1.4;
+}
+
+.auth-feedback.hidden {
+  display: none;
+}
+
+.auth-feedback.error {
+  background: rgba(255, 65, 108, 0.1);
+  border: 1px solid rgba(255, 65, 108, 0.3);
+  color: #ff416c;
+}
+
+.auth-feedback.success {
+  background: rgba(0, 242, 254, 0.08);
+  border: 1px solid rgba(0, 242, 254, 0.25);
+  color: #00f2fe;
+}
+
+/* --- Botão principal --- */
+.login-btn {
+  margin-top: 4px;
+}
+
+.login-btn:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+  transform: none;
+}
+
+/* --- Estados da página de reset de senha --- */
+.reset-state {
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 12px;
+  text-align: center;
+}
+
+.reset-state h3 {
+  font-size: 20px;
+  font-weight: 700;
+}
+
+.reset-state p {
+  font-size: 14px;
+  color: var(--text-muted);
+  line-height: 1.5;
+}
+
+.reset-icon-error {
+  font-size: 52px;
+  color: #ff416c;
+}
+
+.reset-icon-success {
+  font-size: 52px;
+  color: #00f2fe;
+}

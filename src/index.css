@@ -1055,7 +1055,7 @@ body {
   cursor: pointer;
   transition: var(--transition-smooth);
   flex-shrink: 0;
-  width: 69px;
+  width: 104px;
 }
 
 .watchlist-item:hover {
@@ -1079,7 +1079,7 @@ body {
 }
 
 .watchlist-item-info h4 {
-  font-size: 13px;
+  font-size: 20px;
   font-weight: 600;
   white-space: nowrap;
   overflow: hidden;
@@ -1087,7 +1087,7 @@ body {
 }
 
 .watchlist-item-info span {
-  font-size: 11px;
+  font-size: 16px;
   color: #ffc107;
 }
 

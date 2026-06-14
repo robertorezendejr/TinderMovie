@@ -1,0 +1,27 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <title>TinderMovie</title>
+  <script>
+    // Roteador de auth: Supabase sempre redireciona para a raiz do servidor.
+    // Esta página lê o hash da URL e encaminha para a página correta.
+    const hash = window.location.hash;
+    const params = new URLSearchParams(hash.substring(1));
+    const type = params.get("type");
+    const error = params.get("error");
+
+    if (type === "recovery" || error) {
+      // Link de redefinição de senha → reset-password.html
+      window.location.replace("src/reset-password.html" + hash);
+    } else if (hash.includes("access_token")) {
+      // Outros fluxos de auth (confirmação de e-mail, etc.)
+      window.location.replace("src/index.html" + hash);
+    } else {
+      // Acesso normal → login
+      window.location.replace("src/login.html");
+    }
+  </script>
+</head>
+<body></body>
+</html>

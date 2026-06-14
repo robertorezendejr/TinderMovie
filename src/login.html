@@ -1,0 +1,231 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>TinderMovie - Entrar</title>
+
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+
+  <link rel="stylesheet" href="index.css">
+  <link rel="stylesheet" href="login.css">
+</head>
+<body>
+
+  <div id="app" class="app-container">
+    <div class="login-wrapper">
+
+      <!-- Branding -->
+      <div class="login-brand">
+        <img src="assets/icon.png" alt="TinderMovie" class="logo-img login-logo-img">
+        <h1>Tinder<span>Movie</span></h1>
+        <p class="login-tagline">Descubra seu próximo filme favorito</p>
+      </div>
+
+      <!-- Abas Login / Criar Conta -->
+      <div class="auth-tabs">
+        <button class="auth-tab active" id="tab-login" onclick="switchTab('login')">Entrar</button>
+        <button class="auth-tab" id="tab-signup" onclick="switchTab('signup')">Criar Conta</button>
+      </div>
+
+      <!-- Formulário de Login -->
+      <form class="login-form" id="form-login" novalidate>
+
+        <div class="input-group">
+          <label for="login-email">E-mail</label>
+          <div class="input-field">
+            <i class="fa-solid fa-envelope input-icon"></i>
+            <input type="email" id="login-email" placeholder="seu@email.com" autocomplete="email" required>
+          </div>
+        </div>
+
+        <div class="input-group">
+          <div class="label-row">
+            <label for="login-password">Senha</label>
+            <a href="#" class="forgot-link" id="btn-forgot" onclick="handleForgotPassword(event)">Esqueceu a senha?</a>
+          </div>
+          <div class="input-field">
+            <i class="fa-solid fa-lock input-icon"></i>
+            <input type="password" id="login-password" placeholder="••••••••" autocomplete="current-password" required>
+            <button type="button" class="toggle-password" onclick="togglePassword('login-password', 'icon-login')">
+              <i class="fa-solid fa-eye" id="icon-login"></i>
+            </button>
+          </div>
+        </div>
+
+        <div id="login-feedback" class="auth-feedback hidden"></div>
+
+        <button type="submit" class="primary-button login-btn" id="btn-login-submit">
+          Entrar
+        </button>
+
+      </form>
+
+      <!-- Formulário de Criar Conta -->
+      <form class="login-form hidden" id="form-signup" novalidate>
+
+        <div class="input-group">
+          <label for="signup-email">E-mail</label>
+          <div class="input-field">
+            <i class="fa-solid fa-envelope input-icon"></i>
+            <input type="email" id="signup-email" placeholder="seu@email.com" autocomplete="email" required>
+          </div>
+        </div>
+
+        <div class="input-group">
+          <label for="signup-password">Senha</label>
+          <div class="input-field">
+            <i class="fa-solid fa-lock input-icon"></i>
+            <input type="password" id="signup-password" placeholder="Mínimo 6 caracteres" autocomplete="new-password" required minlength="6">
+            <button type="button" class="toggle-password" onclick="togglePassword('signup-password', 'icon-signup')">
+              <i class="fa-solid fa-eye" id="icon-signup"></i>
+            </button>
+          </div>
+        </div>
+
+        <div class="input-group">
+          <label for="signup-confirm">Confirmar Senha</label>
+          <div class="input-field">
+            <i class="fa-solid fa-lock input-icon"></i>
+            <input type="password" id="signup-confirm" placeholder="Repita a senha" autocomplete="new-password" required>
+          </div>
+        </div>
+
+        <div id="signup-feedback" class="auth-feedback hidden"></div>
+
+        <button type="submit" class="primary-button login-btn" id="btn-signup-submit">
+          Criar Conta
+        </button>
+
+      </form>
+
+    </div>
+  </div>
+
+  <!-- Supabase JS -->
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="supabase-client.js"></script>
+  <script>
+    // Redirecionar se já estiver logado
+    supabaseClient.auth.getSession().then(({ data: { session } }) => {
+      if (session) window.location.href = "index.html";
+    });
+
+    function switchTab(tab) {
+      const isLogin = tab === "login";
+      document.getElementById("tab-login").classList.toggle("active", isLogin);
+      document.getElementById("tab-signup").classList.toggle("active", !isLogin);
+      document.getElementById("form-login").classList.toggle("hidden", !isLogin);
+      document.getElementById("form-signup").classList.toggle("hidden", isLogin);
+      clearFeedback();
+    }
+
+    function togglePassword(inputId, iconId) {
+      const input = document.getElementById(inputId);
+      const icon = document.getElementById(iconId);
+      const isHidden = input.type === "password";
+      input.type = isHidden ? "text" : "password";
+      icon.className = isHidden ? "fa-solid fa-eye-slash" : "fa-solid fa-eye";
+    }
+
+    function showFeedback(formId, message, isError) {
+      const el = document.getElementById(formId + "-feedback");
+      el.textContent = message;
+      el.className = "auth-feedback " + (isError ? "error" : "success");
+    }
+
+    function clearFeedback() {
+      ["login", "signup"].forEach(f => {
+        const el = document.getElementById(f + "-feedback");
+        el.className = "auth-feedback hidden";
+        el.textContent = "";
+      });
+    }
+
+    function setLoading(btnId, loading) {
+      const btn = document.getElementById(btnId);
+      btn.disabled = loading;
+      btn.textContent = loading ? "Aguarde..." : (btnId === "btn-login-submit" ? "Entrar" : "Criar Conta");
+    }
+
+    // Login
+    document.getElementById("form-login").addEventListener("submit", async (e) => {
+      e.preventDefault();
+      const email = document.getElementById("login-email").value.trim();
+      const password = document.getElementById("login-password").value;
+
+      setLoading("btn-login-submit", true);
+
+      const { error } = await supabaseClient.auth.signInWithPassword({ email, password });
+
+      if (error) {
+        const msg = error.message.includes("Invalid login") || error.message.includes("invalid")
+          ? "E-mail ou senha incorretos."
+          : error.message;
+        showFeedback("login", msg, true);
+        setLoading("btn-login-submit", false);
+      } else {
+        window.location.href = "index.html";
+      }
+    });
+
+    // Criar Conta
+    document.getElementById("form-signup").addEventListener("submit", async (e) => {
+      e.preventDefault();
+      const email = document.getElementById("signup-email").value.trim();
+      const password = document.getElementById("signup-password").value;
+      const confirm = document.getElementById("signup-confirm").value;
+
+      if (password !== confirm) {
+        showFeedback("signup", "As senhas não coincidem.", true);
+        return;
+      }
+
+      if (password.length < 6) {
+        showFeedback("signup", "A senha precisa ter pelo menos 6 caracteres.", true);
+        return;
+      }
+
+      setLoading("btn-signup-submit", true);
+
+      const { data, error } = await supabaseClient.auth.signUp({ email, password });
+
+      if (error) {
+        showFeedback("signup", error.message, true);
+        setLoading("btn-signup-submit", false);
+      } else if (data.session) {
+        // Confirmação de e-mail desativada — redireciona direto
+        window.location.href = "index.html";
+      } else {
+        // Confirmação de e-mail ativada — orienta o usuário
+        showFeedback("signup", "Conta criada! Faça login com seu e-mail e senha.", false);
+        setLoading("btn-signup-submit", false);
+        setTimeout(() => switchTab("login"), 2000);
+      }
+    });
+
+    // Esqueceu a senha
+    async function handleForgotPassword(e) {
+      e.preventDefault();
+      const email = document.getElementById("login-email").value.trim();
+      if (!email) {
+        showFeedback("login", "Digite seu e-mail acima para redefinir a senha.", true);
+        return;
+      }
+      const redirectTo = window.location.origin + "/src/reset-password.html";
+      const { error } = await supabaseClient.auth.resetPasswordForEmail(email, {
+        emailRedirectTo: redirectTo
+      });
+      if (error) {
+        showFeedback("login", error.message, true);
+      } else {
+        showFeedback("login", "E-mail de redefinição enviado! Verifique sua caixa de entrada.", false);
+      }
+    }
+  </script>
+
+</body>
+</html>

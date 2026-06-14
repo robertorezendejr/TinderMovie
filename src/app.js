@@ -4,6 +4,77 @@
  */
 
 // ==========================================================================
+// Autenticação Supabase
+// ==========================================================================
+
+let currentUser = null;
+
+async function checkAuth() {
+  const { data: { session } } = await supabaseClient.auth.getSession();
+  if (!session) {
+    window.location.href = "login.html";
+    return false;
+  }
+  currentUser = session.user;
+  return true;
+}
+
+async function loadUserWatchlistFromSupabase() {
+  if (!currentUser) return;
+
+  const { data, error } = await supabaseClient
+    .from("user_watchlists")
+    .select("movie_id, action")
+    .eq("user_id", currentUser.id);
+
+  if (error) {
+    console.warn("Erro ao carregar watchlist do Supabase:", error.message);
+    return;
+  }
+
+  if (data && data.length > 0) {
+    data.forEach(row => {
+      if (row.action === "like" && !state.watchlist.likedIds.includes(row.movie_id)) {
+        state.watchlist.likedIds.push(row.movie_id);
+      } else if (row.action === "dislike" && !state.watchlist.dislikedIds.includes(row.movie_id)) {
+        state.watchlist.dislikedIds.push(row.movie_id);
+      }
+    });
+    localStorage.setItem("watchlist", JSON.stringify(state.watchlist));
+  }
+}
+
+async function saveSwipeToSupabase(movieId, action) {
+  if (!currentUser) return;
+
+  await supabaseClient
+    .from("user_watchlists")
+    .upsert(
+      { user_id: currentUser.id, movie_id: movieId, action },
+      { onConflict: "user_id,movie_id" }
+    );
+}
+
+async function clearWatchlistInSupabase() {
+  if (!currentUser) return;
+
+  await supabaseClient
+    .from("user_watchlists")
+    .delete()
+    .eq("user_id", currentUser.id)
+    .eq("action", "like");
+}
+
+async function clearAllHistoryInSupabase() {
+  if (!currentUser) return;
+
+  await supabaseClient
+    .from("user_watchlists")
+    .delete()
+    .eq("user_id", currentUser.id);
+}
+
+// ==========================================================================
 // Estado Global da Aplicação
 // ==========================================================================
 const state = {
@@ -69,8 +140,12 @@ const SWIPE_THRESHOLD = 120;
 // Inicialização do App
 // ==========================================================================
 document.addEventListener("DOMContentLoaded", async () => {
+  const authed = await checkAuth();
+  if (!authed) return;
+
   setupEventListeners();
   loadStateFromLocalStorage();
+  await loadUserWatchlistFromSupabase();
   updateWatchlistBadge();
   await loadCredentials();
 });
@@ -98,12 +173,20 @@ function loadStateFromLocalStorage() {
 
 /**
  * Tenta obter as credenciais da API do TMDB
- * Ordem de prioridade: 
- * 1. LocalStorage (configurado manualmente pelo usuário na UI)
- * 2. Arquivo local .env (obtido via fetch se rodando localmente)
+ * Ordem de prioridade:
+ * 1. config.js (credenciais embutidas para todos os usuários)
+ * 2. LocalStorage (configurado manualmente pelo usuário na UI)
  */
 async function loadCredentials() {
-  // 1. Tentar LocalStorage
+  // 1. Credenciais embutidas no config.js (prioridade máxima)
+  if (window.TMDB_CONFIG && (window.TMDB_CONFIG.bearerToken || window.TMDB_CONFIG.apiKey)) {
+    state.tmdbBearerToken = window.TMDB_CONFIG.bearerToken || "";
+    state.tmdbApiKey = window.TMDB_CONFIG.apiKey || "";
+    initializeAppFlow();
+    return;
+  }
+
+  // 2. Tentar LocalStorage (fallback para configuração manual anterior)
   const localBearer = localStorage.getItem("tmdb_bearer_token");
   const localKey = localStorage.getItem("tmdb_api_key");
 
@@ -112,30 +195,6 @@ async function loadCredentials() {
     state.tmdbApiKey = localKey || "";
     initializeAppFlow();
     return;
-  }
-
-  // 2. Tentar ler o arquivo .env via fetch relativo
-  try {
-    const response = await fetch("../.env");
-    if (response.ok) {
-      const text = await response.text();
-      const envVars = parseEnv(text);
-      
-      const envBearer = envVars["TMDB_BEARER_TOKEN"];
-      const envKey = envVars["TMDB_API_KEY"];
-
-      if (
-        (envBearer && envBearer !== "seu_bearer_token_aqui" && envBearer !== "") || 
-        (envKey && envKey !== "sua_api_key_aqui" && envKey !== "")
-      ) {
-        state.tmdbBearerToken = envBearer || "";
-        state.tmdbApiKey = envKey || "";
-        initializeAppFlow();
-        return;
-      }
-    }
-  } catch (err) {
-    console.warn("Não foi possível ler o arquivo .env localmente. Exibindo modal de configuração.");
   }
 
   // Se nada deu certo, exibe o modal de configuração de chave
@@ -738,7 +797,7 @@ function executeSwipeAction(action) {
 }
 
 /**
- * Salva a interação (Like/Dislike) no LocalStorage
+ * Salva a interação (Like/Dislike) no LocalStorage e no Supabase
  */
 function persistSwipeAction(movieId, actionType) {
   const watchlist = state.watchlist;
@@ -762,7 +821,8 @@ function persistSwipeAction(movieId, actionType) {
   localStorage.setItem("watchlist", JSON.stringify(watchlist));
   state.watchlist = watchlist;
 
-  // Atualiza o badge de contador de filmes salvos
+  saveSwipeToSupabase(movieId, actionType);
+
   updateWatchlistBadge();
 }
 
@@ -873,6 +933,17 @@ function setupEventListeners() {
 
   // Configuração de API Chave Manual
   document.getElementById("btn-save-api").addEventListener("click", saveApiKeyManually);
+
+  // Logout
+  document.getElementById("btn-logout").addEventListener("click", async () => {
+    if (confirm("Deseja sair da sua conta?")) {
+      await supabaseClient.auth.signOut();
+      localStorage.removeItem("watchlist");
+      localStorage.removeItem("recommendationProfile");
+      localStorage.removeItem("filterSettings");
+      window.location.href = "login.html";
+    }
+  });
 }
 
 /**
@@ -1005,13 +1076,14 @@ async function showWatchlist() {
 }
 
 /**
- * Limpa a watchlist curtida
+ * Limpa a watchlist curtida (LocalStorage + Supabase)
  */
 function clearWatchlist() {
   if (confirm("Tem certeza que deseja limpar sua lista de filmes curtidos?")) {
     state.watchlist.likedIds = [];
     state.watchlist.history = state.watchlist.history.filter(h => h.action !== "like");
     localStorage.setItem("watchlist", JSON.stringify(state.watchlist));
+    clearWatchlistInSupabase();
     updateWatchlistBadge();
     showWatchlist();
   }
@@ -1026,7 +1098,8 @@ function clearFullHistory() {
     state.recommendationProfile = { likedGenresFrequency: {}, averageVoteOfLiked: 0, totalLikes: 0, preferredYears: [] };
     localStorage.removeItem("watchlist");
     localStorage.removeItem("recommendationProfile");
-    
+    clearAllHistoryInSupabase();
+
     state.deckQueue = [];
     state.currentPage = 1;
     initializeAppFlow();
