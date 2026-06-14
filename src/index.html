@@ -1,0 +1,253 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="description" content="TinderMovie - Descubra seu próximo filme dando swipes rápidos.">
+  <title>TinderMovie - Descoberta Rápida de Filmes</title>
+  
+  <!-- Fontes Premium -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;800&display=swap" rel="stylesheet">
+  
+  <!-- Icones -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  
+  <!-- Estilos -->
+  <link rel="stylesheet" href="index.css">
+</head>
+<body>
+  
+  <!-- Interface Principal -->
+  <div id="app" class="app-container">
+    
+    <!-- Cabeçalho -->
+    <header class="app-header">
+      <div class="header-logo">
+        <img src="assets/icon.png" alt="TinderMovie Logo" class="logo-img">
+        <h1>Tinder<span>Movie</span></h1>
+      </div>
+      <div class="header-actions">
+        <button id="btn-watchlist" class="watchlist-button" title="Meus Filmes">
+          <i class="fa-solid fa-bookmark"></i>
+          <span>Meus Filmes</span>
+          <span id="watchlist-badge" class="watchlist-badge hidden">0</span>
+        </button>
+        <button id="btn-filters" class="icon-button" title="Filtros de Busca">
+          <i class="fa-solid fa-sliders"></i>
+        </button>
+      </div>
+    </header>
+
+    <!-- Barra de Categorias -->
+    <nav class="categories-bar" aria-label="Filtrar por gênero">
+      <div class="categories-scroll">
+        <button class="category-pill active" data-genre-id="0" id="cat-all">🎬 Todas</button>
+        <button class="category-pill" data-genre-id="28" id="cat-action">💥 Ação</button>
+        <button class="category-pill" data-genre-id="12" id="cat-adventure">🗺️ Aventura</button>
+        <button class="category-pill" data-genre-id="16" id="cat-animation">✨ Animação</button>
+        <button class="category-pill" data-genre-id="35" id="cat-comedy">😂 Comédia</button>
+        <button class="category-pill" data-genre-id="80" id="cat-crime">🔫 Crime</button>
+        <button class="category-pill" data-genre-id="99" id="cat-documentary">🎙️ Documentário</button>
+        <button class="category-pill" data-genre-id="18" id="cat-drama">🎭 Drama</button>
+        <button class="category-pill" data-genre-id="10751" id="cat-family">👨‍👩‍👧 Família</button>
+        <button class="category-pill" data-genre-id="14" id="cat-fantasy">🧙 Fantasia</button>
+        <button class="category-pill" data-genre-id="36" id="cat-history">📜 História</button>
+        <button class="category-pill" data-genre-id="27" id="cat-horror">👻 Terror</button>
+        <button class="category-pill" data-genre-id="10402" id="cat-music">🎵 Música</button>
+        <button class="category-pill" data-genre-id="9648" id="cat-mystery">🔍 Mistério</button>
+        <button class="category-pill" data-genre-id="10749" id="cat-romance">❤️ Romance</button>
+        <button class="category-pill" data-genre-id="878" id="cat-scifi">🚀 Ficção Científica</button>
+        <button class="category-pill" data-genre-id="53" id="cat-thriller">😱 Suspense</button>
+        <button class="category-pill" data-genre-id="10752" id="cat-war">⚔️ Guerra</button>
+        <button class="category-pill" data-genre-id="37" id="cat-western">🤠 Faroeste</button>
+      </div>
+    </nav>
+
+    <!-- Área Principal do Deck -->
+    <main class="main-content">
+      <div id="deck-container" class="deck-container">
+        <!-- Cartas de Filmes serão injetadas aqui via JavaScript -->
+        
+        <!-- Estado de Loading Inicial -->
+        <div id="deck-loading" class="deck-placeholder active">
+          <div class="spinner"></div>
+          <p>Carregando catálogo de filmes...</p>
+        </div>
+
+        <!-- Estado de Deck Vazio (Sem mais filmes) -->
+        <div id="deck-empty" class="deck-placeholder">
+          <div class="empty-illustration">
+            <i class="fa-solid fa-film"></i>
+          </div>
+          <h2>Fim da pilha!</h2>
+          <p>Não encontramos mais filmes com os filtros selecionados.</p>
+          <div class="empty-actions">
+            <button id="btn-reset-filters" class="primary-button">Redefinir Filtros</button>
+            <button id="btn-clear-history" class="secondary-button">Limpar Histórico</button>
+          </div>
+        </div>
+      </div>
+    </main>
+
+    <!-- Controles de Ação (Botoes de Swipe na parte inferior) -->
+    <footer class="app-controls">
+      <button id="btn-dislike" class="control-button dislike" title="Não Gostei (Swipe Esquerda)">
+        <i class="fa-solid fa-xmark"></i>
+      </button>
+      <button id="btn-info" class="control-button info" title="Mais Informações">
+        <i class="fa-solid fa-circle-info"></i>
+      </button>
+      <button id="btn-like" class="control-button like" title="Gostei / Quero Assistir (Swipe Direita)">
+        <i class="fa-solid fa-heart"></i>
+      </button>
+    </footer>
+
+  </div>
+
+  <!-- Modal / Gaveta de Filtros -->
+  <div id="filters-modal" class="modal-overlay">
+    <div class="modal-content glass-card">
+      <div class="modal-header">
+        <h2>Filtros do Catálogo</h2>
+        <button id="btn-close-filters" class="close-button"><i class="fa-solid fa-xmark"></i></button>
+      </div>
+      <div class="modal-body">
+        
+        <!-- Filtro de Gêneros -->
+        <div class="filter-group">
+          <h3>Gêneros</h3>
+          <div id="genres-container" class="genres-grid">
+            <!-- Gêneros carregados dinamicamente -->
+          </div>
+        </div>
+
+        <!-- Filtro de Streaming Providers -->
+        <div class="filter-group">
+          <h3>Plataformas de Streaming (Brasil)</h3>
+          <div id="providers-container" class="providers-grid">
+            <!-- Provedores carregados dinamicamente -->
+          </div>
+        </div>
+
+        <!-- Filtro de Ano de Lançamento -->
+        <div class="filter-group">
+          <h3>Ano de Lançamento</h3>
+          <div class="range-inputs">
+            <input type="number" id="filter-min-year" placeholder="Mín (ex: 2010)" min="1900" max="2026">
+            <span>até</span>
+            <input type="number" id="filter-max-year" placeholder="Máx (ex: 2026)" min="1900" max="2026">
+          </div>
+        </div>
+
+        <!-- Filtro de Nota Mínima -->
+        <div class="filter-group">
+          <h3>Nota Mínima do TMDB</h3>
+          <div class="range-slider">
+            <input type="range" id="filter-min-vote" min="0" max="10" step="0.5" value="6.0">
+            <span id="vote-value">6.0/10</span>
+          </div>
+        </div>
+
+        <!-- Filtro de Duração Máxima -->
+        <div class="filter-group">
+          <h3>Duração Máxima (minutos)</h3>
+          <div class="range-slider">
+            <input type="range" id="filter-max-runtime" min="60" max="240" step="10" value="180">
+            <span id="runtime-value">180 min (3h)</span>
+          </div>
+        </div>
+
+      </div>
+      <div class="modal-footer">
+        <button id="btn-apply-filters" class="primary-button">Aplicar Filtros</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Modal da Watchlist (Filmes Curtidos) -->
+  <div id="watchlist-modal" class="modal-overlay">
+    <div class="modal-content watchlist-content glass-card">
+      <div class="modal-header">
+        <h2><i class="fa-solid fa-bookmark" style="color:#e94057; margin-right:8px"></i>Meus Filmes</h2>
+        <button id="btn-close-watchlist" class="close-button"><i class="fa-solid fa-xmark"></i></button>
+      </div>
+      <div id="watchlist-body" class="modal-body watchlist-grid">
+        <!-- Filmes curtidos serão exibidos aqui -->
+      </div>
+      <div class="modal-footer">
+        <button id="btn-clear-watchlist" class="danger-button">Limpar Lista</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Modal de Detalhes do Filme (Sinopse Completa, Streaming e Trailer) -->
+  <div id="movie-detail-modal" class="modal-overlay">
+    <div class="modal-content detail-content glass-card">
+      <div class="modal-header">
+        <h2 id="detail-title">Título do Filme</h2>
+        <button id="btn-close-detail" class="close-button"><i class="fa-solid fa-xmark"></i></button>
+      </div>
+      <div class="modal-body">
+        <div class="detail-layout">
+          <div class="detail-media">
+            <img id="detail-poster" src="" alt="Poster do filme">
+            <div id="detail-trailer-container" class="trailer-container">
+              <!-- Iframe do Youtube injetado aqui -->
+            </div>
+          </div>
+          <div class="detail-info">
+            <div class="detail-meta">
+              <span id="detail-year" class="meta-tag">Ano</span>
+              <span id="detail-runtime" class="meta-tag">Duração</span>
+              <span id="detail-vote" class="meta-tag rating"><i class="fa-solid fa-star"></i> 8.5</span>
+            </div>
+            <div id="detail-genres" class="detail-genres">
+              <!-- Tags de gênero -->
+            </div>
+            <p id="detail-overview">Sinopse...</p>
+            
+            <div class="detail-streaming">
+              <h3>Onde Assistir (Por Assinatura)</h3>
+              <div id="detail-providers" class="providers-logos">
+                <!-- Logotipos dos provedores -->
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Modal de Configuração da API Key (Fallback se não houver no .env) -->
+  <div id="api-modal" class="modal-overlay">
+    <div class="modal-content glass-card config-modal">
+      <div class="modal-header">
+        <h2>Configurar TMDB API</h2>
+      </div>
+      <div class="modal-body">
+        <p>Para buscar os filmes em tempo real, precisamos da sua credencial de acesso do TMDB. Os dados são salvos localmente e com segurança em seu navegador.</p>
+        <div class="filter-group">
+          <label for="api-bearer-input"><strong>Token de Leitura do TMDB (Bearer Token v4)</strong></label>
+          <textarea id="api-bearer-input" placeholder="Cole aqui o Bearer Token (v4) obtido nas configurações de API do site do TMDB" rows="4"></textarea>
+        </div>
+        <p class="small-text">Ou se preferir, use a chave tradicional v3:</p>
+        <div class="filter-group">
+          <input type="text" id="api-key-input" placeholder="Cole aqui sua API Key v3">
+        </div>
+        <div class="info-alert">
+          <i class="fa-solid fa-circle-info"></i>
+          <span>Como obter? Crie uma conta gratuita em <a href="https://www.themoviedb.org/" target="_blank" rel="noopener">themoviedb.org</a>, acesse Configurações > API e crie uma chave de desenvolvedor.</span>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button id="btn-save-api" class="primary-button">Salvar e Iniciar</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Scripts -->
+  <script src="app.js"></script>
+</body>
+</html>
